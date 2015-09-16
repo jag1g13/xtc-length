@@ -17,13 +17,13 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms){
 
     uint8_t header[92];
 
-    *nframes = 1;
+    *nframes = 0;
     while(fread(header, 92, 1, xtc)){                       // Loop over frames
-        *natoms = u4_from_buffer(header+4);
-        uint32_t frame_size = u4_from_buffer(header+88);
-        uint32_t skip = (frame_size+3) & ~((uint32_t)4);    // Round up to 4 bytes
-        fseek(xtc, skip, SEEK_CUR);                         // Skip to next header
         (*nframes)++;
+        *natoms = u4_from_buffer(header+4);
+        uint32_t frame_size = u4_from_buffer(header+88);    // Read frame size from header
+        uint32_t skip = (frame_size+3) & ~((uint32_t)3);    // Round up to 4 bytes
+        fseek(xtc, skip, SEEK_CUR);                         // Skip to next header
     }
 
     fclose(xtc);
