@@ -12,28 +12,17 @@ uint32_t u4_from_buffer(const uint8_t *b){
 }
 
 int get_xtc_num_frames(const char *filename, int *nframes, int *natoms){
-    // Open XTC file as binary
     FILE *xtc = fopen(filename, "rb");
     if(!xtc) return -1;
 
-    // Read header of first frame
     uint8_t header[92];
-    if(!fread(header, 92, 1, xtc)){
-        fclose(xtc);
-        return -1;
-    }
-    *natoms = u4_from_buffer(header+4);
-    uint32_t frame_size = u4_from_buffer(header+88);
 
     *nframes = 1;
-    while(1){
-        // Round frame_size up to nearest 4
-        uint32_t skip = (frame_size+3) & ~((uint32_t)4);
-        // Skip over frame to next header
-        fseek(xtc, skip, SEEK_CUR);
-        // Read in next frame size
-        if(!fread(header, 92, 1, xtc)) break;
-        frame_size = u4_from_buffer(header+88);
+    while(fread(header, 92, 1, xtc)){                       // Loop over frames
+        *natoms = u4_from_buffer(header+4);
+        uint32_t frame_size = u4_from_buffer(header+88);
+        uint32_t skip = (frame_size+3) & ~((uint32_t)4);    // Round up to 4 bytes
+        fseek(xtc, skip, SEEK_CUR);                         // Skip to next header
         (*nframes)++;
     }
 
