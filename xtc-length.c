@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <locale.h>
 #include <string.h>
 
@@ -33,7 +33,7 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
         *natoms = u4_from_buffer(header+4);
         uint32_t frame_size = u4_from_buffer(header+88);    // Read frame size from header
         uint32_t skip = (frame_size+3) & ~((uint32_t)3);    // Round up to 4 bytes
-        fseek(xtc, skip, SEEK_CUR);                         // Skip to next header
+        fseeko(xtc, skip, SEEK_CUR);                         // Skip to next header
     }
     uint32_t ps_tmp = u4_from_buffer(header+12);
     memcpy(psec, &ps_tmp, 4);
