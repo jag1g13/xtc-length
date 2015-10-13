@@ -5,7 +5,9 @@ This program reads the number of frames in a Gromacs XTC file, the number of ato
 ## To Compile
 From the directory where the project was downloaded:
 
-`cmake .; make`
+`cmake .; make install`
+
+If you with to install to a directory other than default use `cmake . -DCMAKE_INSTALL_PREFIX=<directory>`
 
 Since there is only one source file it is also possible to call the compiler directly if you prefer:
 
