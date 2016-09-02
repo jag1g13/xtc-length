@@ -66,17 +66,13 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
 
 int main(const int argc, const char *argv[]){
     const char *help_text = "Count number of frames and simulation time of GROMACS XTC file\n"
-                            "Usage: xtc-length <xtc name> [-q]\n\n"
+                            "Usage: xtc-length <.xtc> [-q]\n\n"
                             "Default behaviour is to provide running estimate of file length\n"
                             "This can be suppressed using the '-q' flag\n";
 
     setlocale(LC_ALL, "");
 
-    if(argc < 2){
-        printf("ERROR: Incorrect usage - must give input filename\n");
-        return -1;
-    }
-    if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
+    if(argc < 2 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
         printf("%s", help_text);
         return 0;
     }
