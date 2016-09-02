@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <locale.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <sys/stat.h>
 
@@ -28,7 +29,7 @@ void print_header(const uint8_t header[92]){
     printf("\n");
 }
 
-int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *psec){
+int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *psec, bool quiet){
     long size = file_size(filename);
 
     FILE *xtc = fopen(filename, "rb");
@@ -40,13 +41,12 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
     double avg_frame_size = 0.;
     int est_nframes = 0;
     while(fread(header, 92, 1, xtc)){                       // Loop over frames
-        //print_header(header);
         (*nframes)++;
         *natoms = u4_from_buffer(header+4);
         uint32_t frame_size = u4_from_buffer(header+88);    // Read frame size from header
         uint32_t skip = (frame_size+3) & ~((uint32_t)3);    // Round up to 4 bytes
         avg_frame_size += (skip - avg_frame_size + 92) / *nframes;
-        if(*nframes % 10 == 0){
+        if(!quiet && *nframes % 10 == 0){
             est_nframes = size / avg_frame_size;
             uint32_t ps_tmp = u4_from_buffer(header+12);
             memcpy(psec, &ps_tmp, 4);
@@ -65,20 +65,32 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
 }
 
 int main(const int argc, const char *argv[]){
+    const char *help_text = "Count number of frames and simulation time of GROMACS XTC file\n"
+                            "Usage: xtc-length <xtc name> [-q]\n\n"
+                            "Default behaviour is to provide running estimate of file length\n"
+                            "This can be suppressed using the '-q' flag\n";
+
     setlocale(LC_ALL, "");
 
     if(argc < 2){
         printf("ERROR: Incorrect usage - must give input filename\n");
         return -1;
     }
+    if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
+        printf("%s", help_text);
+        return 0;
+    }
+    bool quiet = false;
+    if(argc >= 3 && !strcmp(argv[2], "-q")) quiet = true;
 
     int nframes, natoms;
     float psec;
-    if(get_xtc_num_frames(argv[1], &nframes, &natoms, &psec)){
+    if(get_xtc_num_frames(argv[1], &nframes, &natoms, &psec, quiet)){
         printf("ERROR: Error reading XTC file\n");
         return -1;
     }
 
-    printf("\rTrajectory contains %'d frames (%'.2f ns) of %'d atoms.\n", nframes, psec/1000, natoms);
+    if(!quiet) printf("\r");
+    printf("Trajectory contains %'d frames (%'.2f ns) of %'d atoms.\n", nframes, psec/1000, natoms);
     return 0;
 }
