@@ -11,4 +11,4 @@ If you with to install to a directory other than default use `cmake . -DCMAKE_IN
 
 Since there is only one source file it is also possible to call the compiler directly if you prefer:
 
-`gcc -std=gnu90 -o xtc-length xtc-length.c`
+`gcc -o xtc-length xtc-length.c`
