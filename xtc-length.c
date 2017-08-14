@@ -47,7 +47,7 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
         uint32_t skip = (frame_size+3) & ~((uint32_t)3);    // Round up to 4 bytes
         avg_frame_size += (skip - avg_frame_size + 92) / *nframes;
         if(!quiet && *nframes % 10 == 0){
-            est_nframes = size / avg_frame_size;
+            est_nframes = (int)(size / avg_frame_size);
             uint32_t ps_tmp = u4_from_buffer(header+12);
             memcpy(psec, &ps_tmp, 4);
             *psec *= (double)est_nframes / *nframes;
@@ -65,8 +65,8 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
 }
 
 int main(const int argc, const char *argv[]){
-    const char *help_text = "Count number of frames and simulation time of GROMACS XTC file\n"
-                            "Usage: xtc-length <.xtc> [-q]\n\n"
+    const char *help_text = "Count number of frames and simulation time of GROMACS XTC files\n"
+                            "Usage: xtc-length [-q] xtc [xtc]...\n\n"
                             "Default behaviour is to provide running estimate of file length\n"
                             "This can be suppressed using the '-q' flag\n";
 
@@ -77,16 +77,20 @@ int main(const int argc, const char *argv[]){
         return 0;
     }
     bool quiet = false;
-    if(argc >= 3 && !strcmp(argv[2], "-q")) quiet = true;
+    if(argc >= 2 && !strcmp(argv[1], "-q")) quiet = true;
 
-    int nframes, natoms;
-    float psec;
-    if(get_xtc_num_frames(argv[1], &nframes, &natoms, &psec, quiet)){
-        printf("ERROR: Error reading XTC file\n");
-        return -1;
+    int i;
+    for(i = quiet ? 2 : 1; i < argc; i++){
+        int nframes, natoms;
+        float psec;
+        printf("%s\n", argv[i]);
+        if(get_xtc_num_frames(argv[i], &nframes, &natoms, &psec, quiet)){
+            printf("ERROR: Error reading XTC file\n");
+            return -1;
+        }
+
+        if(!quiet) printf("\r");
+        printf("Trajectory contains %'d frames (%'.2f ns) of %'d atoms.\n\n", nframes, psec / 1000, natoms);
     }
-
-    if(!quiet) printf("\r");
-    printf("Trajectory contains %'d frames (%'.2f ns) of %'d atoms.\n", nframes, psec/1000, natoms);
     return 0;
 }
