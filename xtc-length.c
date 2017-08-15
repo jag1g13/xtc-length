@@ -49,7 +49,7 @@ int get_xtc_num_frames(const char *filename, int *nframes, int *natoms, float *p
         frame_size = u4_from_buffer(header+88);    /* Read frame size from header */
         skip = (frame_size+3) & ~((uint32_t)3);    /* Round up to 4 byte boundary */
         avg_frame_size += (skip - avg_frame_size + 92) / *nframes;
-        if(!quiet && *nframes % 10 == 0){
+        if(!quiet && *nframes % 100 == 0){
             est_nframes = (int)(size / avg_frame_size);
             ps_tmp = u4_from_buffer(header+12);
             memcpy(psec, &ps_tmp, 4);
